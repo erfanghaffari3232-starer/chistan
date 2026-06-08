@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>چیستان حرفه‌ای | ۱۰۰ معما</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Tahoma, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh; display: flex; justify-content: center; align-items: center;
+            padding: 20px; color: white;
+        }
+        .game {
+            background: rgba(26,26,46,0.95); border-radius: 28px; padding: 2rem;
+            width: 100%; max-width: 550px; box-shadow: 0 25px 70px rgba(0,0,0,0.6);
+            border: 2px solid rgba(233,69,96,0.4); position: relative; overflow: hidden;
+        }
+        .game::before {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(233,69,96,0.05) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
+        .game-content { position: relative; z-index: 1; }
+
+        .title {
+            text-align: center; font-size: 2.2rem; font-weight: bold;
+            background: linear-gradient(135deg, #e94560, #f39c12);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; margin-bottom: 5px;
+        }
+        .subtitle { text-align: center; color: #a2a8d3; font-size: 0.9rem; margin-bottom: 1.2rem; }
+
+        .stats {
+            display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 1.2rem;
+        }
+        .stat {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px; padding: 12px 16px; text-align: center; min-width: 75px;
+        }
+        .stat-val { font-size: 1.5rem; font-weight: bold; }
+        .stat-lbl { font-size: 0.7rem; color: #888; margin-top: 2px; }
+        .correct-val { color: #4ecca3; }
+        .wrong-val { color: #e94560; }
+        .hint-val { color: #f39c12; }
+        .score-val { color: #9b59b6; }
+
+        .progress-bar {
+            width: 100%; height: 8px; background: rgba(255,255,255,0.1);
+            border-radius: 10px; margin-bottom: 1.2rem; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; background: linear-gradient(90deg, #e94560, #f39c12, #4ecca3);
+            border-radius: 10px; transition: width 0.5s ease; width: 0%;
+        }
+
+        .question-card {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px; padding: 1.8rem 1.5rem; text-align: center;
+            margin-bottom: 1.2rem; min-height: 140px; display: flex;
+            flex-direction: column; justify-content: center; align-items: center;
+        }
+        .q-num { font-size: 0.8rem; color: #f39c12; margin-bottom: 0.8rem; }
+        .q-text { font-size: 1.2rem; line-height: 1.8; }
+        .q-hint {
+            color: #f39c12; font-size: 0.85rem; margin-top: 1rem; display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .q-hint.show { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .input-row { display: flex; gap: 8px; margin-bottom: 0.8rem; }
+        .input-row input {
+            flex: 1; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.15);
+            padding: 14px 18px; border-radius: 14px; color: white; font-size: 1.1rem;
+            font-family: Tahoma; text-align: center; transition: 0.3s;
+        }
+        .input-row input:focus { outline: none; border-color: #e94560; box-shadow: 0 0 20px rgba(233,69,96,0.2); }
+        .input-row button {
+            background: #4ecca3; color: #1a1a1a; border: none; padding: 14px 20px;
+            border-radius: 14px; font-weight: bold; cursor: pointer; font-family: Tahoma;
+            font-size: 1rem; transition: 0.3s;
+        }
+        .input-row button:hover { background: #3baa8a; transform: scale(1.03); }
+
+        .btn-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+        .btn {
+            padding: 10px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.05); color: white; cursor: pointer;
+            font-family: Tahoma; font-size: 0.85rem; transition: 0.3s;
+        }
+        .btn:hover { background: rgba(255,255,255,0.15); border-color: #e94560; }
+        .btn-hint { background: rgba(243,156,18,0.2); border-color: #f39c12; color: #f39c12; }
+        .btn-next { background: rgba(78,204,163,0.2); border-color: #4ecca3; color: #4ecca3; }
+        .btn-reset { background: rgba(233,69,96,0.2); border-color: #e94560; color: #e94560; }
+
+        .msg { text-align: center; min-height: 28px; font-weight: bold; margin-top: 0.5rem; }
+        .msg.correct { color: #4ecca3; }
+        .msg.wrong { color: #e94560; }
+
+        .celebration {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 999; display: none;
+        }
+        .confetti {
+            position: absolute; width: 12px; height: 12px; border-radius: 3px;
+            animation: fall linear forwards;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(105vh) rotate(720deg); opacity: 0; }
+        }
+
+        @media (max-width: 500px) {
+            .game { padding: 1.5rem 1rem; }
+            .q-text { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game">
+        <div class="game-content">
+            <div class="title">🧩 چیستان</div>
+            <div class="subtitle">۱۰۰ معمای جذاب - خودت رو به چالش بکش!</div>
+
+            <div class="stats">
+                <div class="stat"><div class="stat-val correct-val" id="correct">۰</div><div class="stat-lbl">✅ درست</div></div>
+                <div class="stat"><div class="stat-val wrong-val" id="wrong">۰</div><div class="stat-lbl">❌ غلط</div></div>
+                <div class="stat"><div class="stat-val hint-val" id="hints">۰</div><div class="stat-lbl">💡 راهنمایی</div></div>
+                <div class="stat"><div class="stat-val score-val" id="score">۰</div><div class="stat-lbl">⭐ امتیاز</div></div>
+            </div>
+
+            <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+            <div class="question-card">
+                <div class="q-num" id="qNum">سوال ۱ از ۱۰۰</div>
+                <div class="q-text" id="qText">...</div>
+                <div class="q-hint" id="qHint"></div>
+            </div>
+
+            <div class="input-row">
+                <input type="text" id="answerInput" placeholder="پاسخ را بنویسید..." onkeypress="if(event.key==='Enter') checkAnswer()">
+                <button onclick="checkAnswer()">✅</button>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-hint" onclick="showHint()">💡 راهنمایی</button>
+                <button class="btn" onclick="skipQuestion()">⏭️ رد کردن</button>
+                <button class="btn btn-next" onclick="nextQuestion()">▶️ بعدی</button>
+                <button class="btn btn-reset" onclick="resetGame()">🔄 شروع دوباره</button>
+            </div>
+
+            <div class="msg" id="msg"></div>
+        </div>
+    </div>
+
+    <div class="celebration" id="celebration"></div>
+
+    <script>
+        var questions = [
+            { q: 'آن چیست که هرچه بیشتر از آن بردارید، بزرگتر می‌شود؟', a: 'چاله', h: 'توی زمین ایجاد میشه' },
+            { q: 'آن چیست که یک چشم دارد اما نمی‌تواند ببیند؟', a: 'سوزن', h: 'برای دوختن استفاده میشه' },
+            { q: 'آن چیست که هرچه بیشتر باشد، کمتر می‌بینی؟', a: 'تاریکی', h: 'وقتی چراغ خاموشه' },
+            { q: 'آن چیست که بالا می‌رود اما پایین نمی‌آید؟', a: 'سن', h: 'هر سال یکی بهش اضافه میشه' },
+            { q: 'آن چیست که مال توست اما دیگران بیشتر از تو استفاده می‌کنند؟', a: 'اسم', h: 'همه صدات می‌زنن' },
+            { q: 'آن چیست که پر از سوراخ است اما آب را نگه می‌دارد؟', a: 'اسفنج', h: 'توی حمام ازش استفاده می‌کنی' },
+            { q: 'آن چیست که هرچه بیشتر خشک شود، خیس‌تر می‌شود؟', a: 'حوله', h: 'بعد از حمام استفاده میشه' },
+            { q: 'آن چیست که می‌تواند دور دنیا بگردد اما گوشه اتاق بماند؟', a: 'تمبر', h: 'روی نامه می‌چسبه' },
+            { q: 'آن چیست که صبح چهار پا، ظهر دو پا و شب سه پا راه می‌رود؟', a: 'انسان', h: 'معمای معروف ابوالهول' },
+            { q: 'آن چیست که هرگز سوال نمی‌پرسد اما همیشه جواب دارد؟', a: 'تلفن', h: 'زنگ می‌خوره جواب میدی' },
+            { q: 'آن چیست که اگر اسمش را ببری، می‌شکند؟', a: 'سکوت', h: 'وقتی حرف می‌زنی تموم میشه' },
+            { q: 'آن چیست که در آب خیس نمی‌شود؟', a: 'سایه', h: 'همیشه همراهته' },
+            { q: 'آن چیست که دهان دارد اما غذا نمی‌خورد؟', a: 'غار', h: 'توی کوه پیدا میشه' },
+            { q: 'آن چیست که گردن دارد ولی سر ندارد؟', a: 'بطری', h: 'توش آب می‌ریزی' },
+            { q: 'آن چیست که یک پا دارد و کلاه بر سر می‌گذارد؟', a: 'قارچ', h: 'توی جنگل پیدا میشه' },
+            { q: 'آن چیست که پرنده نیست اما پرواز می‌کند؟', a: 'بادکنک', h: 'توی جشن تولد هست' },
+            { q: 'آن چیست که دندان دارد اما گاز نمی‌گیرد؟', a: 'شانه', h: 'برای مو استفاده میشه' },
+            { q: 'آن چیست که هرچه از آن بردارند، سنگین‌تر می‌شود؟', a: 'کیسه زباله', h: 'پر از آشغال میشه' },
+            { q: 'آن چیست که همه آن را دارند اما خدا بیشتر از همه؟', a: 'بزرگی', h: 'یه صفت خوبه' },
+            { q: 'آن چیست که هرچه بزرگتر باشد، کمتر دیده می‌شود؟', a: 'فروتنی', h: 'یه ویژگی اخلاقی' },
+            { q: 'آن چیست که می‌شکند اما صدا ندارد؟', a: 'قلب', h: 'وقتی ناراحت میشی' },
+            { q: 'آن چیست که هرچه بیشتر باشد، ارزشش کمتر است؟', a: 'دروغ', h: 'راستش بهتره' },
+            { q: 'آن چیست که همیشه جلوی توست اما نمی‌توانی ببینی؟', a: 'آینده', h: 'هنوز نیومده' },
+            { q: 'آن چیست که هرچه سریع‌تر بروی، دیرتر می‌رسی؟', a: 'خواب', h: 'شب اتفاق میفته' },
+            { q: 'آن چیست که از تو دور می‌شود اما همیشه همراه توست؟', a: 'سایه', h: 'وقتی میدوی' },
+            { q: 'آن چیست که هرچه بیشتر بخوری، گرسنه‌تر می‌شوی؟', a: 'هیچی', h: 'یه چیز خنده‌دار' },
+            { q: 'آن چیست که با یک دست نمی‌توانی برداری؟', a: 'کف زدن', h: 'برای تشویق' },
+            { q: 'آن چیست که هرچه بیشتر بشنوی، کمتر می‌فهمی؟', a: 'شایعه', h: 'دهن به دهن می‌چرخه' },
+            { q: 'آن چیست که همیشه می‌آید اما هیچوقت نمی‌رسد؟', a: 'فردا', h: 'روز بعد از امروز' },
+            { q: 'آن چیست که هرچه بیشتر پس بدهی، بیشتر می‌گیری؟', a: 'احترام', h: 'با ادب باشی' },
+            { q: 'آن چیست که می‌توانی بشکنی بدون اینکه لمسش کنی؟', a: 'قول', h: 'وقتی بدقولی می‌کنی' },
+            { q: 'آن چیست که پر از سوراخ است اما آب را نگه می‌دارد؟', a: 'اسفنج', h: 'ظرف شستن' },
+            { q: 'آن چیست که هرچه بیشتر از آن برداری، بزرگتر می‌شود؟', a: 'گودال', h: 'وقتی خاک برداری' },
+            { q: 'آن چیست که دارد می‌آید اما هرگز نمی‌رسد؟', a: 'فردا', h: 'همیشه یک روز جلوتره' },
+            { q: 'آن چیست که هرچه بلندتر فریاد بزنی، کمتر صدایت را می‌شنوند؟', a: 'دروغ', h: 'کسی باور نمیکنه' },
+            { q: 'آن چیست که می‌توانی نگهش داری بدون اینکه دست بزنی؟', a: 'نفس', h: 'توی سینه‌ته' },
+            { q: 'آن چیست که هرچه بیشتر یاد بگیری، کمتر می‌دانی؟', a: 'ندانستن', h: 'علم بیشتر، سوال بیشتر' },
+            { q: 'آن چیست که زنده است اما نفس نمی‌کشد؟', a: 'ماهی در آب', h: 'آبشش داره' },
+            { q: 'آن چیست که هرچه بیشتر بروی، دورتر می‌شوی؟', a: 'افق', h: 'خط آسمان' },
+            { q: 'آن چیست که می‌تواند پرواز کند اما بال ندارد؟', a: 'زمان', h: 'زود می‌گذره' },
+            { q: 'آن چیست که هرچه بیشتر بخندی، کمتر داری؟', a: 'غم', h: 'وقتی شادی' },
+            { q: 'آن چیست که همیشه هست اما دیده نمی‌شود؟', a: 'هوا', h: 'نفس می‌کشی' },
+            { q: 'آن چیست که هرچه بیشتر تقسیم کنی، بیشتر می‌شود؟', a: 'محبت', h: 'به بقیه بدی' },
+            { q: 'آن چیست که می‌تواند تمام دنیا را بپیماید اما از جایش تکان نخورد؟', a: 'فکر', h: 'توی ذهنه' },
+            { q: 'آن چیست که هرچه بیشتر داشته باشی، فقیرتری؟', a: 'طمع', h: 'همیشه بیشتر می‌خوای' },
+            { q: 'آن چیست که همیشه در حال حرکت است اما هرگز خسته نمی‌شود؟', a: 'رودخانه', h: 'آب جاری' },
+            { q: 'آن چیست که هرچه بیشتر بشنوی، کمتر می‌شناسی؟', a: 'شایعه', h: 'حرف مردم' },
+            { q: 'آن چیست که می‌توانی ببینی اما نمی‌توانی لمس کنی؟', a: 'رویا', h: 'وقتی می‌خوابی' },
+            { q: 'آن چیست که هرچه بیشتر مصرف کنی، بیشتر باقی می‌ماند؟', a: 'دانش', h: 'یاد گرفتن' },
+            { q: 'آن چیست که هرچه از آن بگیری، بیشتر پس می‌دهد؟', a: 'زمین', h: 'کشاورزی' },
+            { q: 'آن چیست که بدون پا راه می‌رود؟', a: 'ابر', h: 'توی آسمون' },
+            { q: 'آن چیست که هرچه بلندتر باشد، کوتاه‌تر به نظر می‌رسد؟', a: 'فاصله', h: 'از دور' },
+            { q: 'آن چیست که می‌تواند حرف بزند اما دهان ندارد؟', a: 'کتاب', h: 'داستان می‌گه' },
+            { q: 'آن چیست که همیشه در حال تغییر است اما هرگز عوض نمی‌شود؟', a: 'حقیقت', h: 'واقعیت' },
+            { q: 'آن چیست که می‌توانی خرج کنی بدون اینکه کم شود؟', a: 'وقت', h: 'همیشه می‌گذره' },
+            { q: 'آن چیست که هرچه نرم‌تر باشی، قوی‌تری؟', a: 'آب', h: 'سنگ رو می‌تراشه' },
+            { q: 'آن چیست که هرچه بیشتر پنهان کنی، آشکارتر می‌شود؟', a: 'حقیقت', h: 'بالاخره معلوم میشه' },
+            { q: 'آن چیست که می‌توانی بشنوی اما نمی‌توانی ببینی؟', a: 'صدا', h: 'با گوش' },
+            { q: 'آن چیست که همیشه به دنبال توست اما نمی‌توانی فرار کنی؟', a: 'سرنوشت', h: 'قسمت' },
+            { q: 'آن چیست که هرچه بیشتر آتش بزنی، خاموش‌تر می‌شود؟', a: 'شمع', h: 'آب میشه' },
+            { q: 'آن چیست که بدون قفل بسته می‌شود؟', a: 'راز', h: 'توی دل می‌مونه' },
+            { q: 'آن چیست که می‌تواند همه چیز را ببیند اما چشم ندارد؟', a: 'دوربین', h: 'عکس می‌گیره' },
+            { q: 'آن چیست که هرچه بیشتر گریه کنی، شادتری؟', a: 'اشک شوق', h: 'خوشحالی' },
+            { q: 'آن چیست که همیشه می‌توانی روی آن حساب کنی؟', a: 'انگشت', h: 'دستت' },
+            { q: 'آن چیست که هرچه پیرتر می‌شوی، جوان‌تر به نظر می‌رسی؟', a: 'عکس قدیمی', h: 'یادگاری' },
+            { q: 'آن چیست که بدون بال پرواز می‌کند؟', a: 'باد', h: 'هوا' },
+            { q: 'آن چیست که می‌تواند آتش را خاموش کند بدون آب؟', a: 'خاک', h: 'روی آتش' },
+            { q: 'آن چیست که هرچه بیشتر دور بریزی، بیشتر می‌ماند؟', a: 'بذر', h: 'کاشتن' },
+            { q: 'آن چیست که همیشه سبز است اما گیاه نیست؟', a: 'امید', h: 'تو دله' },
+            { q: 'آن چیست که هرچه تیزتر باشد، کندتر می‌شود؟', a: 'مداد', h: 'می‌نویسی' },
+            { q: 'آن چیست که می‌توانی قرض بگیری اما نمی‌توانی پس بدهی؟', a: 'زمان', h: 'برنمی‌گرده' },
+            { q: 'آن چیست که هرچه بیشتر نگاه کنی، کمتر می‌بینی؟', a: 'خورشید', h: 'چشم رو می‌زنه' },
+            { q: 'آن چیست که همیشه می‌توانی پیدا کنی اما نمی‌توانی بگیری؟', a: 'راه', h: 'مسیر' },
+            { q: 'آن چیست که هرچه جلوتر بروی، عقب‌تر می‌افتی؟', a: 'عقربه ساعت', h: 'زمان' },
+            { q: 'آن چیست که می‌تواند سخت باشد اما نرم بشکند؟', a: 'دل', h: 'احساس' },
+            { q: 'آن چیست که هرچه سردتر باشد، گرمتر می‌کند؟', a: 'آغوش', h: 'بغل کردن' },
+            { q: 'آن چیست که همیشه در حال سوختن است اما خاکستر نمی‌شود؟', a: 'خورشید', h: 'ستاره' },
+            { q: 'آن چیست که هرچه بیشتر بدوی، کمتر می‌رسی؟', a: 'خواب', h: 'شب' },
+            { q: 'آن چیست که می‌تواند سنگین باشد اما وزن ندارد؟', a: 'غم', h: 'ناراحتی' },
+            { q: 'آن چیست که هرچه بیشتر تقسیم کنی، بیشتر می‌شود؟', a: 'شادی', h: 'با دیگران' },
+            { q: 'آن چیست که همیشه هست اما تمام می‌شود؟', a: 'عمر', h: 'زندگی' },
+            { q: 'آن چیست که هرچه آرام‌تر باشی، سریع‌تر می‌رسی؟', a: 'صبر', h: 'عجله نکنی' },
+            { q: 'آن چیست که می‌تواند بلند باشد اما کوتاه دیده شود؟', a: 'کوه از دور', h: 'فاصله' },
+            { q: 'آن چیست که هرچه تاریک‌تر باشد، روشن‌تر می‌شود؟', a: 'ستاره', h: 'شب' },
+            { q: 'آن چیست که همیشه می‌توانی لمس کنی اما نگه نداری؟', a: 'آب جاری', h: 'رودخونه' },
+            { q: 'آن چیست که هرچه بیشتر خرج کنی، بیشتر پس‌انداز می‌کنی؟', a: 'تجربه', h: 'یادگیری' },
+            { q: 'آن چیست که می‌تواند پرواز کند اما پرنده نیست؟', a: 'هواپیما', h: 'مسافرت' },
+            { q: 'آن چیست که هرچه بیشتر بکاری، بیشتر برداشت می‌کنی؟', a: 'محبت', h: 'دوستی' },
+            { q: 'آن چیست که همیشه می‌توانی بشنوی اما نمی‌توانی ببینی؟', a: 'موسیقی', h: 'آهنگ' },
+            { q: 'آن چیست که هرچه بزرگتر باشی، کوچکتر می‌شوی؟', a: 'غرور', h: 'فروتنی بهتره' },
+            { q: 'آن چیست که می‌تواند شیرین باشد اما شکر نیست؟', a: 'عسل', h: 'زنبور' },
+            { q: 'آن چیست که هرچه بیشتر ببخشی، بیشتر می‌گیری؟', a: 'بخشش', h: 'گذشت' },
+            { q: 'آن چیست که همیشه در حال رشد است اما زنده نیست؟', a: 'کوه', h: 'زمین' },
+            { q: 'آن چیست که هرچه بیشتر بخوابی، خسته‌تری؟', a: 'تنبلی', h: 'زیاد خوابیدن' },
+            { q: 'آن چیست که می‌تواند همه را سیر کند اما خودش گرسنه می‌ماند؟', a: 'آشپز', h: 'غذا درست می‌کنه' },
+            { q: 'آن چیست که همیشه هست اما دیده نمی‌شود تا وقتی که نباشد؟', a: 'سلامتی', h: 'وقتی مریض میشی' },
+            { q: 'آن چیست که می‌تواند خاموش باشد اما روشن کند؟', a: 'شمع خاموش', h: 'وقتی روشنش کنی' },
+            { q: 'آن چیست که هرچه بیشتر نگاه کنی، دورتر می‌شود؟', a: 'افق', h: 'آسمون' },
+            { q: 'آن چیست که همیشه می‌توانی روی آن بایستی اما نمی‌توانی ببینی؟', a: 'زمین', h: 'زیر پاته' },
+            { q: 'آن چیست که هرچه بیشتر بشکنی، قوی‌تر می‌شوی؟', a: 'رکورد', h: 'ورزش' }
+        ];
+
+        var currentQ = 0;
+        var stats = { correct: 0, wrong: 0, hints: 0, score: 0 };
+        var answered = false;
+
+        function shuffleArray(arr) {
+            var shuffled = arr.slice();
+            for (var i = shuffled.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var temp = shuffled[i]; shuffled[i] = shuffled[j]; shuffled[j] = temp;
+            }
+            return shuffled;
+        }
+
+        questions = shuffleArray(questions);
+
+        function loadQuestion() {
+            if (currentQ >= questions.length) {
+                finishGame();
+                return;
+            }
+            answered = false;
+            document.getElementById('qNum').textContent = 'سوال ' + (currentQ + 1) + ' از ' + questions.length;
+            document.getElementById('qText').textContent = questions[currentQ].q;
+            document.getElementById('qHint').textContent = '💡 ' + questions[currentQ].h;
+            document.getElementById('qHint').classList.remove('show');
+            document.getElementById('answerInput').value = '';
+            document.getElementById('answerInput').focus();
+            document.getElementById('msg').textContent = '';
+            document.getElementById('msg').className = 'msg';
+            document.getElementById('progress').style.width = ((currentQ / questions.length) * 100) + '%';
+            updateStats();
+        }
+
+        function checkAnswer() {
+            if (answered) return;
+            var ans = document.getElementById('answerInput').value.trim();
+            if (!ans) return;
+            
+            answered = true;
+            var correct = questions[currentQ].a;
+            
+            if (ans === correct || correct.includes(ans) || ans.includes(correct)) {
+                stats.correct++;
+                stats.score += 10;
+                document.getElementById('msg').textContent = '✅ آفرین! درست گفتی! (+۱۰ امتیاز)';
+                document.getElementById('msg').className = 'msg correct';
+                celebrate();
+            } else {
+                stats.wrong++;
+                document.getElementById('msg').textContent = '❌ نه! جواب: ' + correct;
+                document.getElementById('msg').className = 'msg wrong';
+            }
+            updateStats();
+        }
+
+        function showHint() {
+            if (answered) return;
+            stats.hints++;
+            stats.score = Math.max(0, stats.score - 2);
+            document.getElementById('qHint').classList.add('show');
+            updateStats();
+        }
+
+        function skipQuestion() {
+            currentQ++;
+            loadQuestion();
+        }
+
+        function nextQuestion() {
+            if (!answered) {
+                stats.wrong++;
+                stats.score = Math.max(0, stats.score - 5);
+            }
+            currentQ++;
+            loadQuestion();
+        }
+
+        function resetGame() {
+            if (confirm('از اول شروع کنیم؟')) {
+                questions = shuffleArray(questions);
+                currentQ = 0;
+                stats = { correct: 0, wrong: 0, hints: 0, score: 0 };
+                loadQuestion();
+            }
+        }
+
+        function finishGame() {
+            var total = questions.length;
+            var grade = stats.correct >= 90 ? '🏆 افسانه‌ای!' : 
+                        stats.correct >= 70 ? '🌟 عالی!' : 
+                        stats.correct >= 50 ? '👏 خوب!' : 
+                        stats.correct >= 30 ? '💪 متوسط' : '📚 بیشتر تمرین کن';
+            
+            document.getElementById('qText').textContent = '🎉 تموم شد! ' + grade;
+            document.getElementById('qNum').textContent = '';
+            document.getElementById('msg').textContent = 'نمره: ' + stats.correct + ' از ' + total + ' | امتیاز: ' + stats.score;
+            document.getElementById('msg').className = 'msg correct';
+            document.getElementById('progress').style.width = '100%';
+            celebrate();
+        }
+
+        function updateStats() {
+            document.getElementById('correct').textContent = stats.correct.toLocaleString('fa-IR');
+            document.getElementById('wrong').textContent = stats.wrong.toLocaleString('fa-IR');
+            document.getElementById('hints').textContent = stats.hints.toLocaleString('fa-IR');
+            document.getElementById('score').textContent = stats.score.toLocaleString('fa-IR');
+        }
+
+        function celebrate() {
+            var el = document.getElementById('celebration');
+            el.style.display = 'block';
+            el.innerHTML = '';
+            var colors = ['#e94560', '#f39c12', '#4ecca3', '#3498db', '#9b59b6', '#ff6b6b'];
+            
+            for (var i = 0; i < 60; i++) {
+                var confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                confetti.style.width = (Math.random() * 10 + 8) + 'px';
+                confetti.style.height = (Math.random() * 10 + 8) + 'px';
+                el.appendChild(confetti);
+            }
+            
+            setTimeout(function() { el.style.display = 'none'; }, 3500);
+        }
+
+        loadQuestion();
+    </script>
+</body>
+</html>
